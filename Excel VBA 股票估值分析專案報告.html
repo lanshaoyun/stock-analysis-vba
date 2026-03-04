@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="light" style=""><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel VBA 股票資料整理與估值分析工具 - 專案報告</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <style>
+      /* Global Reset & Typography */
+      :root {
+        --primary-color: #1e3a8a; /* Deep Blue */
+        --secondary-color: #3b82f6; /* Medium Blue */
+        --accent-color: #60a5fa; /* Light Blue */
+        --text-color: #1f2937;
+        --bg-color: #ffffff;
+        --font-main: 'Microsoft JhengHei', '微軟正黑體', 'Heiti TC', sans-serif;
+      }
+
+      body {
+        font-family: var(--font-main);
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 40px 80px;
+        line-height: 1.6;
+        text-align: justify;
+      }
+
+      /* Override Pico CSS defaults to look like Word */
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-family: var(--font-main);
+        color: var(--primary-color);
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+        font-weight: bold;
+        line-height: 1.3;
+        --typography-spacing-vertical: 0;
+      }
+
+      h1 {
+        font-size: 24pt;
+        border-bottom: 2px solid var(--secondary-color);
+        padding-bottom: 10px;
+        margin-top: 0;
+      }
+      h2 {
+        font-size: 18pt;
+        border-left: 5px solid var(--secondary-color);
+        padding-left: 10px;
+        background-color: #f0f7ff;
+        padding-top: 5px;
+        padding-bottom: 5px;
+      }
+      h3 {
+        font-size: 14pt;
+        color: var(--secondary-color);
+        margin-top: 1.2em;
+      }
+
+      p {
+        margin-bottom: 1em;
+        text-indent: 0;
+        font-size: 12pt;
+      }
+
+      ul,
+      ol {
+        margin-bottom: 1em;
+        padding-left: 2em;
+      }
+      li {
+        margin-bottom: 0.5em;
+        font-size: 12pt;
+      }
+
+      /* Tables - Word Style */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-size: 11pt;
+        border: 1px solid #000;
+      }
+      th,
+      td {
+        border: 1px solid #000; /* Standard thin black border like Word default */
+        padding: 8px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: bold;
+        text-align: center;
+      }
+      tr:nth-child(even) {
+        background-color: #f8fafc;
+      }
+
+      /* Cover Page Specifics */
+      .cover-page {
+        height: 900px; /* Approximate visual height of A4 */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border: 3px double var(--primary-color);
+        padding: 40px;
+        margin-bottom: 60px;
+        position: relative;
+      }
+
+      .cover-title {
+        font-size: 32pt;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .cover-subtitle {
+        font-size: 18pt;
+        color: var(--secondary-color);
+        margin-bottom: 100px;
+        font-weight: normal;
+      }
+
+      .cover-info {
+        margin-top: auto;
+        font-size: 14pt;
+        width: 100%;
+      }
+
+      .cover-date {
+        font-size: 14pt;
+        margin-top: 20px;
+        font-weight: bold;
+      }
+
+      /* TOC */
+      .toc {
+        background-color: #f9fafb;
+        padding: 30px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 50px;
+      }
+      .toc-title {
+        text-align: center;
+        font-size: 16pt;
+        margin-bottom: 20px;
+        color: var(--primary-color);
+        border-bottom: none;
+      }
+      .toc ul {
+        list-style-type: none;
+        padding-left: 0;
+      }
+      .toc li {
+        border-bottom: 1px dashed #ccc;
+        padding: 8px 0;
+        display: flex;
+        justify-content: space-between;
+      }
+      .toc li span:last-child {
+        font-weight: bold;
+      }
+
+      /* Helpers */
+      .page-break {
+        page-break-before: always;
+        margin-top: 50px;
+        border-top: 1px solid #ddd;
+        padding-top: 50px;
+      }
+
+      .highlight-box {
+        background-color: #eff6ff;
+        border-left: 4px solid var(--secondary-color);
+        padding: 15px;
+        margin: 15px 0;
+        font-size: 11pt;
+      }
+
+      /* Print adjustments */
+      @media print {
+        body {
+          padding: 0;
+          max-width: 100%;
+        }
+        .cover-page {
+          border: none;
+          height: 100vh;
+        }
+        .page-break {
+          page-break-before: always;
+          border: none;
+          margin: 0;
+          padding: 0;
+        }
+      }
+    </style>
+  </head>
+  <body style="" data-new-gr-c-s-check-loaded="14.1275.0" data-gr-ext-installed="" data-new-gr-c-s-loaded="14.1275.0">
+    <!-- Cover Page -->
+    <div class="cover-page">
+      <div style="margin-top: 150px">
+        <div class="cover-title"><span style="color: rgb(0, 0, 0);">Excel VBA 股票資料整理</span><br><span style="color: rgb(0, 0, 0);">與估值分析工具</span></div>
+        <div class="cover-subtitle"><span style="color: rgb(0, 0, 0);">公開資料整合與投資決策支援系統</span></div>
+      </div>
+
+      <div class="cover-info">
+        <p><strong><span style="color: rgb(0, 0, 0);">專案報告</span></strong></p>
+        <hr style="width: 50%; margin: 20px auto; border-color: var(--primary-color)">
+        <div class="cover-date"><span style="color: rgb(0, 0, 0);">2026年3月</span></div>
+      </div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="toc">
+      <h2 class="toc-title"><span style="color: rgb(0, 0, 0);">目錄</span></h2>
+      <ul>
+        <li><span style="color: rgb(0, 0, 0);">第一章：專案概述</span></li>
+        <li><span style="color: rgb(0, 0, 0);">第二章：功能模組</span></li>
+        <li><span style="color: rgb(0, 0, 0);">　2.1 產業類股指數排名</span></li>
+        <li><span style="color: rgb(0, 0, 0);">　2.2 財務報表抓取與整理</span></li>
+        <li><span style="color: rgb(0, 0, 0);">　2.3 財務指標計算</span></li>
+        <li><span style="color: rgb(0, 0, 0);">　2.4 估值分析</span></li>
+        <li><span style="color: rgb(0, 0, 0);">第三章：系統架構</span></li>
+        <li><span style="color: rgb(0, 0, 0);">第四章：財務指標說明</span></li>
+        <li><span style="color: rgb(0, 0, 0);">第五章：估值方法</span></li>
+        <li><span style="color: rgb(0, 0, 0);">第六章：專案效益與結論</span></li>
+      </ul>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- Chapter 1 -->
+    <h1><span style="color: rgb(0, 0, 0);">第一章：專案概述</span></h1>
+    <p><span style="color: rgb(0, 0, 0);">
+      在當前資訊爆炸的金融市場中，投資者往往面臨數據分散、整理耗時的痛點。本專案「Excel VBA
+      股票資料整理與估值分析工具」旨在利用自動化技術，解決投資分析過程中的效率問題。
+    </span></p>
+    <p><span style="color: rgb(0, 0, 0);">
+      本系統運用 Microsoft Excel 結合 VBA (Visual Basic for Applications)
+      程式語言，建構了一套自動化的資料爬取與分析引擎。系統能夠自動連接至公開金融資料網站（如台灣指數公司、公開資訊觀測站等），擷取最新的股市與財報數據，並將其轉化為標準化的分析報表。
+    </span></p>
+    <p><span style="color: rgb(0, 0, 0);">
+      透過整合產業趨勢分析、基本面財務分析以及量化估值模型，本工具協助投資人快速篩選優質標的，並依據歷史本益比位階判斷進場時機，從而建立具備數據支撐的投資決策流程。
+    </span></p>
+
+    <!-- Chapter 2 -->
+    <h1><span style="color: rgb(0, 0, 0);">第二章：功能模組</span></h1>
+    <p><span style="color: rgb(0, 0, 0);">本專案共包含四大核心功能模組，涵蓋從宏觀產業分析到微觀個股估值的完整流程。</span></p>
+
+    <h2><span style="color: rgb(0, 0, 0);">2.1 產業類股指數排名</span></h2>
+    <p><span style="color: rgb(0, 0, 0);">此模組負責監控市場資金流向與產業強弱勢。透過 VBA 自動化腳本，系統每日定時執行以下任務：</span></p>
+    <ul>
+      <li><strong><span style="color: rgb(0, 0, 0);">資料來源：</span></strong><span style="color: rgb(0, 0, 0);">直接連接至 TIP 台灣指數公司官方網站。</span></li>
+      <li><strong><span style="color: rgb(0, 0, 0);">資料抓取：</span></strong><span style="color: rgb(0, 0, 0);">自動下載當日上市與上櫃所有產業類股的指數數據。</span></li>
+      <li><strong><span style="color: rgb(0, 0, 0);">分析邏輯：</span></strong><span style="color: rgb(0, 0, 0);">計算各產業指數的漲跌幅，並進行排序。</span></li>
+      <li><strong><span style="color: rgb(0, 0, 0);">產出結果：</span></strong><span style="color: rgb(0, 0, 0);">生成「產業強弱勢排行榜」，協助使用者快速識別當前市場的主流熱點與弱勢板塊。</span></li>
+    </ul>
+
+    <h2><span style="color: rgb(0, 0, 0);">2.2 財務報表抓取與整理</span></h2>
+    <p><span style="color: rgb(0, 0, 0);">針對個股的基本面分析，本模組實現了繁瑣財報資料的自動化整理：</span></p>
+    <ul>
+      <li><strong><span style="color: rgb(0, 0, 0);">資料來源：</span></strong><span style="color: rgb(0, 0, 0);">公開資訊觀測站 (MOPS)。</span></li>
+      <li>
+        <strong><span style="color: rgb(0, 0, 0);">自動化流程：</span></strong><span style="color: rgb(0, 0, 0);">使用者輸入股票代號後，系統自動抓取該公司最新一季的「資產負債表 (Balance
+        Sheet)」與「綜合損益表 (Income Statement)」。
+      </span></li>
+      <li>
+        <strong><span style="color: rgb(0, 0, 0);">資料清洗：</span></strong><span style="color: rgb(0, 0, 0);">自動剔除網頁原始數據中的雜訊，將非結構化數據轉換為標準的 Excel
+        資料表格式，便於後續運算與存檔。
+      </span></li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h2><span style="color: rgb(0, 0, 0);">2.3 財務指標計算</span></h2>
+    <p><span style="color: rgb(0, 0, 0);">
+      在取得原始財報數據後，系統自動計算關鍵財務比率，以多維度評估企業體質。系統亦提供圖表化功能，視覺化呈現不同公司或不同季度的獲利表現比較。分析維度包含：
+    </span></p>
+    <div class="highlight-box">
+      <strong><span style="color: rgb(0, 0, 0);">分析維度摘要：</span></strong>
+      <ul>
+        <li><strong><span style="color: rgb(0, 0, 0);">獲利能力：</span></strong><span style="color: rgb(0, 0, 0);">評估公司賺取利潤的效率。</span></li>
+        <li><strong><span style="color: rgb(0, 0, 0);">償債能力：</span></strong><span style="color: rgb(0, 0, 0);">評估公司的財務安全與風險。</span></li>
+        <li><strong><span style="color: rgb(0, 0, 0);">成長性 (YOY)：</span></strong><span style="color: rgb(0, 0, 0);">比較各項獲利指標與去年同期的成長幅度。</span></li>
+      </ul>
+    </div>
+
+    <h2><span style="color: rgb(0, 0, 0);">2.4 估值分析</span></h2>
+    <p><span style="color: rgb(0, 0, 0);">本模組為投資決策的核心，結合歷史數據與即時股價，計算個股的合理價值區間：</span></p>
+    <ul>
+      <li>
+        <strong><span style="color: rgb(0, 0, 0);">歷史本益比資料庫：</span></strong><span style="color: rgb(0, 0, 0);">內建並整合台灣證交所 2007 年至 2023
+        年的上市櫃公司歷史本益比數據，建立長週期的估值基準。
+      </span></li>
+      <li><strong><span style="color: rgb(0, 0, 0);">每股盈餘 (EPS) 整合：</span></strong><span style="color: rgb(0, 0, 0);">自動從 HiStock 網站抓取最新的 EPS 數據作為估值基礎。</span></li>
+      <li>
+        <strong><span style="color: rgb(0, 0, 0);">即時行情整合：</span></strong><span style="color: rgb(0, 0, 0);">系統即時抓取個股的開盤價、最高價、最低價、收盤價及成交量，並將現價與估算價值進行比對，直觀呈現目前的股價位階（便宜/合理/昂貴）。
+      </span></li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <!-- Chapter 3 -->
+    <h1><span style="color: rgb(0, 0, 0);">第三章：系統架構</span></h1>
+    <p><span style="color: rgb(0, 0, 0);">
+      本系統基於 Microsoft Office Excel 環境開發，充分利用 VBA
+      的強大擴充性與易用性，無需額外安裝複雜的資料庫軟體即可運行。
+    </span></p>
+
+    <h3><span style="color: rgb(0, 0, 0);">3.1 開發環境與技術</span></h3>
+    <table>
+      <tbody><tr>
+        <th width="30%"><span style="color: rgb(0, 0, 0);">項目</span></th>
+        <th><span style="color: rgb(0, 0, 0);">說明</span></th>
+      </tr>
+      <tr>
+        <td><strong><span style="color: rgb(0, 0, 0);">開發工具</span></strong></td>
+        <td><span style="color: rgb(0, 0, 0);">Microsoft Excel 2016+, Visual Basic for Applications (VBA)</span></td>
+      </tr>
+      <tr>
+        <td><strong><span style="color: rgb(0, 0, 0);">網路爬蟲技術</span></strong></td>
+        <td><span style="color: rgb(0, 0, 0);">
+          XMLHTTP / WinHttp 物件 request 發送，搭配 HTML Document 物件模型與 Regular Expression (正規表達式)
+          進行資料解析。
+        </span></td>
+      </tr>
+      <tr>
+        <td><strong><span style="color: rgb(0, 0, 0);">資料儲存</span></strong></td>
+        <td><span style="color: rgb(0, 0, 0);">Excel Worksheet (作為輕量級資料庫使用)</span></td>
+      </tr>
+    </tbody></table>
+
+    <h3><span style="color: rgb(0, 0, 0);">3.2 資料流向圖</span></h3>
+    <p><span style="color: rgb(0, 0, 0);">系統運作流程如下所示：</span></p>
+    <div style="border: 2px dashed #ccc; padding: 20px; text-align: center; background-color: #fcfcfc; color: #555"><span style="color: rgb(0, 0, 0);">
+      [外部資料源]</span><br><span style="color: rgb(0, 0, 0);">
+      (TIP 指數公司 / MOPS / 證交所 / HiStock)</span><br><span style="color: rgb(0, 0, 0);">
+      ⬇</span><br><span style="color: rgb(0, 0, 0);">
+      [VBA 爬蟲引擎]</span><br><span style="color: rgb(0, 0, 0);">
+      (HTTP 請求 &amp; HTML 解析)</span><br><span style="color: rgb(0, 0, 0);">
+      ⬇</span><br><span style="color: rgb(0, 0, 0);">
+      [Excel 資料處理層]</span><br><span style="color: rgb(0, 0, 0);">
+      (清洗、格式化、運算)</span><br><span style="color: rgb(0, 0, 0);">
+      ⬇</span><br><span style="color: rgb(0, 0, 0);">
+      [使用者介面]</span><br><span style="color: rgb(0, 0, 0);">
+      (報表展示 / 估值儀表板 / 圖表分析)
+    </span></div>
+
+    <div class="page-break"></div>
+
+    <!-- Chapter 4 -->
+    <h1><span style="color: rgb(0, 0, 0);">第四章：財務指標說明</span></h1>
+    <p><span style="color: rgb(0, 0, 0);">本系統自動計算之財務指標定義與公式如下表所示，確保分析標準的一致性。</span></p>
+
+    <table>
+      <thead>
+        <tr>
+          <th width="20%"><span style="color: rgb(0, 0, 0);">類別</span></th>
+          <th width="30%"><span style="color: rgb(0, 0, 0);">指標名稱</span></th>
+          <th width="50%"><span style="color: rgb(0, 0, 0);">計算公式</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="6"><strong><span style="color: rgb(0, 0, 0);">獲利能力</span></strong></td>
+          <td><span style="color: rgb(0, 0, 0);">毛利率 (Gross Margin)</span></td>
+          <td><span style="color: rgb(0, 0, 0);">(營業收入 - 營業成本) / 營業收入 × 100%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color: rgb(0, 0, 0);">營業利益率 (Operating Margin)</span></td>
+          <td><span style="color: rgb(0, 0, 0);">營業利益 / 營業收入 × 100%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color: rgb(0, 0, 0);">稅後淨利率 (Net Margin)</span></td>
+          <td><span style="color: rgb(0, 0, 0);">稅後淨利 / 營業收入 × 100%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color: rgb(0, 0, 0);">股東權益報酬率 (ROE)</span></td>
+          <td><span style="color: rgb(0, 0, 0);">稅後淨利 / 平均股東權益 × 100%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color: rgb(0, 0, 0);">資產報酬率 (ROA)</span></td>
+          <td><span style="color: rgb(0, 0, 0);">稅後淨利 / 平均資產總額 × 100%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color: rgb(0, 0, 0);">每股盈餘 (EPS)</span></td>
+          <td><span style="color: rgb(0, 0, 0);">(稅後淨利 - 特別股股利) / 加權平均股數</span></td>
+        </tr>
+        <tr>
+          <td rowspan="3"><strong><span style="color: rgb(0, 0, 0);">償債能力</span></strong></td>
+          <td><span style="color: rgb(0, 0, 0);">流動比率 (Current Ratio)</span></td>
+          <td><span style="color: rgb(0, 0, 0);">流動資產 / 流動負債 × 100%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color: rgb(0, 0, 0);">負債比率 (Debt Ratio)</span></td>
+          <td><span style="color: rgb(0, 0, 0);">總負債 / 總資產 × 100%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color: rgb(0, 0, 0);">負債權益比 (D/E Ratio)</span></td>
+          <td><span style="color: rgb(0, 0, 0);">總負債 / 股東權益 × 100%</span></td>
+        </tr>
+        <tr>
+          <td rowspan="3"><strong><span style="color: rgb(0, 0, 0);">成長性 (YOY)</span></strong></td>
+          <td><span style="color: rgb(0, 0, 0);">營業毛利年增率</span></td>
+          <td><span style="color: rgb(0, 0, 0);">(本期毛利 - 去年同期毛利) / |去年同期毛利| × 100%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color: rgb(0, 0, 0);">營業利益年增率</span></td>
+          <td><span style="color: rgb(0, 0, 0);">(本期營業利益 - 去年同期營業利益) / |去年同期營業利益| × 100%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color: rgb(0, 0, 0);">稅後淨利年增率</span></td>
+          <td><span style="color: rgb(0, 0, 0);">(本期淨利 - 去年同期淨利) / |去年同期淨利| × 100%</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <!-- Chapter 5 -->
+    <h1><span style="color: rgb(0, 0, 0);">第五章：估值方法</span></h1>
+    <p><span style="color: rgb(0, 0, 0);">
+      本專案採用「本益比評價法 (P/E Ratio
+      Valuation)」作為核心估值模型。此方法適合獲利穩定、非景氣循環劇烈的成熟型企業。系統利用大數據整合 2007 年至 2023
+      年長達 17 年的歷史本益比區間，以平滑單一年度的市場波動。
+    </span></p>
+
+    <h3><span style="color: rgb(0, 0, 0);">5.1 計算邏輯</span></h3>
+    <p><span style="color: rgb(0, 0, 0);">基本公式為：</span><strong><span style="color: rgb(0, 0, 0);">目標股價 = 預估 EPS × 設定本益比</span></strong></p>
+
+    <h3><span style="color: rgb(0, 0, 0);">5.2 價格區間定義</span></h3>
+    <p><span style="color: rgb(0, 0, 0);">系統依據個股歷史數據，自動計算出三個關鍵價格點：</span></p>
+
+    <table>
+      <tbody><tr>
+        <th width="25%"><span style="color: rgb(0, 0, 0);">評價等級</span></th>
+        <th width="35%"><span style="color: rgb(0, 0, 0);">計算公式</span></th>
+        <th><span style="color: rgb(0, 0, 0);">投資意涵</span></th>
+      </tr>
+      <tr>
+        <td><strong><span style="color: rgb(0, 0, 0);">便宜價 (Cheap)</span></strong></td>
+        <td><span style="color: rgb(0, 0, 0);">EPS × 歷史最低本益比</span></td>
+        <td><span style="color: rgb(0, 0, 0);">股價落在此價格以下，代表市場估值處於歷史低點，具有較高的安全邊際，適合考慮分批佈局。</span></td>
+      </tr>
+      <tr>
+        <td><strong><span style="color: rgb(0, 0, 0);">合理價 (Fair)</span></strong></td>
+        <td><span style="color: rgb(0, 0, 0);">EPS × 歷史平均本益比</span></td>
+        <td><span style="color: rgb(0, 0, 0);">股價落在此價格附近，代表估值反映了公司的平均獲利能力，價格公允。</span></td>
+      </tr>
+      <tr>
+        <td><strong><span style="color: rgb(0, 0, 0);">昂貴價 (Expensive)</span></strong></td>
+        <td><span style="color: rgb(0, 0, 0);">EPS × 歷史最高本益比</span></td>
+        <td><span style="color: rgb(0, 0, 0);">股價落在此價格以上，代表市場情緒過熱或已完全反映未來成長，風險相對較高，應審慎評估。</span></td>
+      </tr>
+    </tbody></table>
+
+    <h3><span style="color: rgb(0, 0, 0);">5.3 動態更新</span></h3>
+    <p><span style="color: rgb(0, 0, 0);">
+      系統會抓取當日即時收盤價與上述三個價格進行比對，並在介面上以顏色標示（如綠色代表便宜、紅色代表昂貴），讓使用者一目了然當前的風險報酬比。
+    </span></p>
+
+    <!-- Chapter 6 -->
+    <h1><span style="color: rgb(0, 0, 0);">第六章：專案效益與結論</span></h1>
+
+    <h3><span style="color: rgb(0, 0, 0);">6.1 專案效益</span></h3>
+    <p><span style="color: rgb(0, 0, 0);">本工具的開發與應用帶來了顯著的效益：</span></p>
+    <ul>
+      <li>
+        <strong><span style="color: rgb(0, 0, 0);">大幅提升效率：</span></strong><span style="color: rgb(0, 0, 0);">將原本需要數小時的人工查詢、複製貼上與計算過程，縮短至數秒鐘內完成，節省超過 90%
+        的資料整理時間。
+      </span></li>
+      <li><strong><span style="color: rgb(0, 0, 0);">決策客觀化：</span></strong><span style="color: rgb(0, 0, 0);">透過量化數據與歷史估值模型，減少人為情緒干擾，提供客觀的進出場依據。</span></li>
+      <li><strong><span style="color: rgb(0, 0, 0);">資料即時性：</span></strong><span style="color: rgb(0, 0, 0);">即時串接公開資訊與股價，確保分析基礎為最新的市場資訊。</span></li>
+      <li><strong><span style="color: rgb(0, 0, 0);">視覺化呈現：</span></strong><span style="color: rgb(0, 0, 0);">整合圖表功能，讓複雜的財務數字轉化為直觀的趨勢圖，便於快速解讀。</span></li>
+    </ul>
+
+    <h3><span style="color: rgb(0, 0, 0);">6.2 結論</span></h3>
+    <p><span style="color: rgb(0, 0, 0);">
+      「Excel VBA 股票資料整理與估值分析工具」成功整合了 TIP 台灣指數公司、公開資訊觀測站、台灣證交所與 HiStock
+      等多方資源。透過 VBA
+      自動化技術，我們建立了一套從「產業面」篩選、「基本面」體檢到「評價面」估值的完整投資分析系統。
+    </span></p>
+    <p><span style="color: rgb(0, 0, 0);">
+      此專案不僅驗證了 Excel VBA
+      在金融數據處理上的強大能力，更為個人投資者與財務分析人員提供了一套低成本、高效率且具備高度客製化彈性的分析利器，有效提升投資研究的品質與精準度。</span>
+    </p>
+  
+
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration></html>
